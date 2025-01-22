@@ -20,7 +20,7 @@ interface SceneInfo {
 }
 
 export async function generateUserStory(
-  scenes: SceneInfo[], 
+  scenes: SceneInfo[],
   notes: string,
   subtitles?: string
 ): Promise<string> {
@@ -31,17 +31,20 @@ export async function generateUserStory(
     });
 
     // Process base64 images for Gemini and combine with scene information
-    const imageObjects = scenes.map(scene => ({
+    const imageObjects = scenes.map((scene) => ({
       inlineData: {
-        data: scene.frameData.split(',')[1], // Remove the data:image/jpeg;base64, prefix
-        mimeType: "image/jpeg"
-      }
+        data: scene.frameData.split(",")[1], // Remove the data:image/jpeg;base64, prefix
+        mimeType: "image/jpeg",
+      },
     }));
 
     // Create a scene-by-scene description
-    const sceneDescriptions = scenes.map((scene, index) => 
-      `Scene ${index + 1} (Timestamp: ${formatTime(scene.timestamp)})`
-    ).join('\n');
+    const sceneDescriptions = scenes
+      .map(
+        (scene, index) =>
+          `Scene ${index + 1} (Timestamp: ${formatTime(scene.timestamp)})`
+      )
+      .join("\n");
 
     const prompt = `You are a Product Manager assistant that creates detailed user stories from video frame sequences. 
     Analyze these frames from a video demonstration and create a detailed user story.
@@ -49,10 +52,14 @@ export async function generateUserStory(
     Video Timeline:
     ${sceneDescriptions}
     
-    ${subtitles ? `Clip Dialogue/Captions:
+    ${
+      subtitles
+        ? `Clip Dialogue/Captions:
     ${subtitles}
     
-    ` : ''}Context Notes: ${notes}
+    `
+        : ""
+    }Context Notes: ${notes}
     
     Each frame represents a key scene change in the video. Consider the sequence and progression of scenes, along with any dialogue or captions, when analyzing the feature demonstration.
     
@@ -77,18 +84,18 @@ export async function generateUserStory(
 
     const result = await chatSession.sendMessage([
       { text: prompt },
-      ...imageObjects
+      ...imageObjects,
     ]);
 
     return result.response.text();
   } catch (error) {
-    console.error('Error generating user story:', error);
-    throw new Error('Failed to generate user story');
+    console.error("Error generating user story:", error);
+    throw new Error("Failed to generate user story");
   }
 }
 
 function formatTime(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
