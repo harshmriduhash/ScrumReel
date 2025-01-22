@@ -1,18 +1,26 @@
-"use client"
+"use client";
 
-import { useRef, useState, useEffect } from 'react';
-import { detectSceneChanges } from '../../lib/video-utils';
-import { FrameSelector } from './frame-selector';
-import { SceneInfo } from '../../lib/types';
-import { getSubtitlesForClip, type Subtitle } from '../../lib/srt-utils';
+import { useRef, useState, useEffect } from "react";
+import { detectSceneChanges } from "../../lib/video-utils";
+import { FrameSelector } from "./frame-selector";
+import { SceneInfo } from "../../lib/types";
+import { getSubtitlesForClip, type Subtitle } from "../../lib/srt-utils";
 
 interface VideoPlayerProps {
   videoFile: File;
-  onClipSelect: (scenes: SceneInfo[], notes: string, clipRange: { start: number; end: number }) => void;
+  onClipSelect: (
+    scenes: SceneInfo[],
+    notes: string,
+    clipRange: { start: number; end: number }
+  ) => void;
   subtitles?: Subtitle[];
 }
 
-export function VideoPlayer({ videoFile, onClipSelect, subtitles = [] }: VideoPlayerProps) {
+export function VideoPlayer({
+  videoFile,
+  onClipSelect,
+  subtitles = [],
+}: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -20,7 +28,7 @@ export function VideoPlayer({ videoFile, onClipSelect, subtitles = [] }: VideoPl
   const [endTime, setEndTime] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [detectedScenes, setDetectedScenes] = useState<SceneInfo[]>([]);
-  const [clipSubtitles, setClipSubtitles] = useState<string>('');
+  const [clipSubtitles, setClipSubtitles] = useState<string>("");
 
   useEffect(() => {
     if (videoRef.current) {
@@ -48,7 +56,7 @@ export function VideoPlayer({ videoFile, onClipSelect, subtitles = [] }: VideoPl
     } else if (endTime === null) {
       const end = currentTime;
       setEndTime(end);
-      
+
       // Get subtitles for the selected clip using actual timestamps
       if (subtitles.length > 0) {
         const clipText = getSubtitlesForClip(subtitles, startTime, end);
@@ -59,13 +67,13 @@ export function VideoPlayer({ videoFile, onClipSelect, subtitles = [] }: VideoPl
       setStartTime(currentTime);
       setEndTime(null);
       setDetectedScenes([]);
-      setClipSubtitles('');
+      setClipSubtitles("");
     }
   };
 
   const handleDetectScenes = async () => {
     if (startTime === null || endTime === null) {
-      alert('Please select a clip first by setting start and end points.');
+      alert("Please select a clip first by setting start and end points.");
       return;
     }
 
@@ -82,11 +90,11 @@ export function VideoPlayer({ videoFile, onClipSelect, subtitles = [] }: VideoPl
         startTime,
         endTime
       );
-      
+
       setDetectedScenes(scenes);
     } catch (error) {
-      console.error('Error detecting scenes:', error);
-      alert('Failed to detect scenes. Please try again.');
+      console.error("Error detecting scenes:", error);
+      alert("Failed to detect scenes. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -94,7 +102,7 @@ export function VideoPlayer({ videoFile, onClipSelect, subtitles = [] }: VideoPl
 
   const handleFrameSelect = (selectedScenes: SceneInfo[], notes: string) => {
     if (startTime === null || endTime === null) return;
-    
+
     // Pass clip subtitles directly to onClipSelect
     onClipSelect(selectedScenes, notes, { start: startTime, end: endTime });
   };
@@ -102,7 +110,7 @@ export function VideoPlayer({ videoFile, onClipSelect, subtitles = [] }: VideoPl
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -110,16 +118,16 @@ export function VideoPlayer({ videoFile, onClipSelect, subtitles = [] }: VideoPl
       <div className="relative space-y-4">
         {/* Video Progress Bar */}
         <div className="absolute -top-6 left-0 right-0 h-2 bg-secondary rounded-full overflow-hidden">
-          <div 
+          <div
             className="h-full bg-primary transition-all"
             style={{ width: `${(currentTime / duration) * 100}%` }}
           />
           {startTime !== null && (
-            <div 
+            <div
               className="absolute top-0 h-full bg-primary/30"
-              style={{ 
+              style={{
                 left: `${(startTime / duration) * 100}%`,
-                right: endTime ? `${100 - (endTime / duration) * 100}%` : '0'
+                right: endTime ? `${100 - (endTime / duration) * 100}%` : "0",
               }}
             />
           )}
@@ -138,32 +146,36 @@ export function VideoPlayer({ videoFile, onClipSelect, subtitles = [] }: VideoPl
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card p-4 rounded-lg shadow-sm">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-muted px-3 py-1.5 rounded-md">
-              <span className="text-sm font-medium">{formatTime(currentTime)}</span>
+              <span className="text-sm font-medium">
+                {formatTime(currentTime)}
+              </span>
               <span className="text-muted-foreground">/</span>
-              <span className="text-sm text-muted-foreground">{formatTime(duration)}</span>
+              <span className="text-sm text-muted-foreground">
+                {formatTime(duration)}
+              </span>
             </div>
             <button
               onClick={handleSetClipPoint}
               className={`px-4 py-2 rounded-md transition-colors ${
                 startTime === null
-                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
                   : endTime === null
-                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                  : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "bg-destructive text-destructive-foreground hover:bg-destructive/90"
               }`}
               title={
                 startTime === null
-                  ? 'Set the starting point of your clip'
+                  ? "Set the starting point of your clip"
                   : endTime === null
-                  ? 'Set the ending point of your clip'
-                  : 'Clear the current clip selection'
+                  ? "Set the ending point of your clip"
+                  : "Clear the current clip selection"
               }
             >
               {startTime === null
-                ? '📍 Set Start'
+                ? "📍 Set Start"
                 : endTime === null
-                ? '🎬 Set End'
-                : '🔄 Reset Clip'}
+                ? "🎬 Set End"
+                : "🔄 Reset Clip"}
             </button>
           </div>
 
@@ -178,10 +190,10 @@ export function VideoPlayer({ videoFile, onClipSelect, subtitles = [] }: VideoPl
               disabled={isProcessing || startTime === null || endTime === null}
               className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 ${
                 isProcessing
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                  ? "bg-muted text-muted-foreground cursor-not-allowed"
                   : startTime === null || endTime === null
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  ? "bg-muted text-muted-foreground cursor-not-allowed"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
               }`}
               title="Analyze the selected clip to detect scene changes"
             >
@@ -220,7 +232,7 @@ export function VideoPlayer({ videoFile, onClipSelect, subtitles = [] }: VideoPl
                 </div>
               </div>
             )}
-            
+
             {clipSubtitles && (
               <div className="bg-card p-4 rounded-lg shadow-sm space-y-2">
                 <h4 className="text-sm font-medium">Clip Subtitles</h4>
@@ -242,7 +254,8 @@ export function VideoPlayer({ videoFile, onClipSelect, subtitles = [] }: VideoPl
             <div className="space-y-1">
               <h3 className="text-lg font-semibold">Scene Selection</h3>
               <p className="text-sm text-muted-foreground">
-                {detectedScenes.length} key moments detected. Select the most relevant scenes for your user story.
+                {detectedScenes.length} key moments detected. Select the most
+                relevant scenes for your user story.
               </p>
             </div>
             <div className="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm">
@@ -250,10 +263,7 @@ export function VideoPlayer({ videoFile, onClipSelect, subtitles = [] }: VideoPl
             </div>
           </div>
 
-          <FrameSelector 
-            scenes={detectedScenes}
-            onSend={handleFrameSelect} 
-          />
+          <FrameSelector scenes={detectedScenes} onSend={handleFrameSelect} />
 
           <div className="mt-6 pt-6 border-t">
             <div className="flex items-center justify-between mb-4">
