@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { parseSRT, validateSRTWithVideo } from '../../lib/srt-utils';
+import { useState, useCallback } from "react";
+import { useDropzone } from "react-dropzone";
+import { parseSRT, validateSRTWithVideo } from "../../lib/srt-utils";
 
 interface FileUploadProps {
   onFileSelect: (files: { video: File | null; subtitles?: string }) => void;
@@ -17,21 +17,23 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
   const processSRTFile = async (file: File, videoDuration: number) => {
     try {
       const text = await file.text();
-      console.log('Processing SRT content:', text); // Debug log
-      
+      console.log("Processing SRT content:", text); // Debug log
+
       const subtitles = parseSRT(text);
-      console.log('Parsed subtitles:', subtitles); // Debug log
-      
+      console.log("Parsed subtitles:", subtitles); // Debug log
+
       // Validate SRT timing with video duration
       if (!validateSRTWithVideo(subtitles, videoDuration)) {
-        throw new Error('SRT file timings do not match video duration');
+        throw new Error("SRT file timings do not match video duration");
       }
 
       setSrtFile(file);
       return text;
     } catch (error) {
-      console.error('SRT processing error:', error); // Debug log
-      setError(error instanceof Error ? error.message : 'Failed to process SRT file');
+      console.error("SRT processing error:", error); // Debug log
+      setError(
+        error instanceof Error ? error.message : "Failed to process SRT file"
+      );
       setSrtFile(null);
       return null;
     }
@@ -39,9 +41,9 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
 
   const getVideoDuration = (file: File): Promise<number> => {
     return new Promise((resolve, reject) => {
-      const video = document.createElement('video');
-      video.preload = 'metadata';
-      
+      const video = document.createElement("video");
+      video.preload = "metadata";
+
       video.onloadedmetadata = () => {
         URL.revokeObjectURL(video.src);
         resolve(video.duration);
@@ -49,91 +51,111 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
 
       video.onerror = () => {
         URL.revokeObjectURL(video.src);
-        reject(new Error('Failed to load video metadata'));
+        reject(new Error("Failed to load video metadata"));
       };
 
       video.src = URL.createObjectURL(file);
     });
   };
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    setError(null);
-    
-    for (const file of acceptedFiles) {
-      if (file.type.startsWith('video/')) {
-        try {
-          const duration = await getVideoDuration(file);
-          setVideoFile(file);
-          
-          // If we already have an SRT file, reprocess it with the new video
-          if (srtFile) {
-            const srtContent = await processSRTFile(srtFile, duration);
-            if (srtContent) {
-              onFileSelect({ video: file, subtitles: srtContent });
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      setError(null);
+
+      for (const file of acceptedFiles) {
+        if (file.type.startsWith("video/")) {
+          try {
+            const duration = await getVideoDuration(file);
+            setVideoFile(file);
+
+            // If we already have an SRT file, reprocess it with the new video
+            if (srtFile) {
+              const srtContent = await processSRTFile(srtFile, duration);
+              if (srtContent) {
+                onFileSelect({ video: file, subtitles: srtContent });
+              }
+            } else {
+              onFileSelect({ video: file });
             }
-          } else {
-            onFileSelect({ video: file });
+          } catch (error) {
+            setError(
+              error instanceof Error
+                ? error.message
+                : "Failed to process video file"
+            );
+            setVideoFile(null);
           }
-        } catch (error) {
-          setError(error instanceof Error ? error.message : 'Failed to process video file');
-          setVideoFile(null);
-        }
-      } else if (file.name.endsWith('.srt')) {
-        if (!videoFile) {
-          setError('Please upload a video file first');
-          return;
-        }
-
-        // Quick size check for obviously invalid files
-        if (file.size === 0) {
-          setError('SRT file is empty');
-          return;
-        }
-
-        if (file.size > 1024 * 1024) { // 1MB limit
-          setError('SRT file is too large. Maximum size is 1MB.');
-          return;
-        }
-
-        try {
-          const duration = await getVideoDuration(videoFile);
-          const srtContent = await processSRTFile(file, duration);
-          if (srtContent) {
-            onFileSelect({ video: videoFile, subtitles: srtContent });
+        } else if (file.name.endsWith(".srt")) {
+          if (!videoFile) {
+            setError("Please upload a video file first");
+            return;
           }
-        } catch (error) {
-          setError(error instanceof Error ? error.message : 'Failed to process SRT file');
+
+          // Quick size check for obviously invalid files
+          if (file.size === 0) {
+            setError("SRT file is empty");
+            return;
+          }
+
+          if (file.size > 1024 * 1024) {
+            // 1MB limit
+            setError("SRT file is too large. Maximum size is 1MB.");
+            return;
+          }
+
+          try {
+            const duration = await getVideoDuration(videoFile);
+            const srtContent = await processSRTFile(file, duration);
+            if (srtContent) {
+              onFileSelect({ video: videoFile, subtitles: srtContent });
+            }
+          } catch (error) {
+            setError(
+              error instanceof Error
+                ? error.message
+                : "Failed to process SRT file"
+            );
+          }
         }
       }
-    }
-  }, [videoFile, srtFile, onFileSelect]);
+    },
+    [videoFile, srtFile, onFileSelect]
+  );
 
   const VideoUpload = () => {
-    const { getRootProps: getVideoRootProps, getInputProps: getVideoInputProps } = useDropzone({
+    const {
+      getRootProps: getVideoRootProps,
+      getInputProps: getVideoInputProps,
+    } = useDropzone({
       onDrop,
       accept: {
-        'video/*': [],
+        "video/*": [],
       },
       multiple: false,
-      disabled: !!videoFile
+      disabled: !!videoFile,
     });
 
     return (
       <div
         {...getVideoRootProps()}
         className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-          ${!videoFile ? (isDragging ? 'border-primary bg-secondary/50' : 'border-border hover:border-primary hover:bg-secondary/20')
-            : 'border-primary bg-primary/5'}`}
+          ${
+            !videoFile
+              ? isDragging
+                ? "border-primary bg-secondary/50"
+                : "border-border hover:border-primary hover:bg-secondary/20"
+              : "border-primary bg-primary/5"
+          }`}
         onDragEnter={() => !videoFile && setIsDragging(true)}
         onDragLeave={() => !videoFile && setIsDragging(false)}
       >
         <input {...getVideoInputProps()} />
         <div className="flex flex-col items-center gap-2">
           <p className="text-lg font-medium">
-            {!videoFile ? 'Upload Video File' : 'Video Uploaded'}
+            {!videoFile ? "Upload Video File" : "Video Uploaded"}
           </p>
           <p className="text-sm text-muted-foreground">
-            {!videoFile ? 'Drag and drop or click to select' : videoFile.name}
+            {!videoFile ? "Drag and drop or click to select" : videoFile.name}
           </p>
           {videoFile && (
             <button
@@ -154,33 +176,46 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
   };
 
   const SubtitleUpload = () => {
-    const { getRootProps: getSrtRootProps, getInputProps: getSrtInputProps } = useDropzone({
-      onDrop,
-      accept: {
-        'application/x-subrip': ['.srt'],
-        'text/plain': ['.srt']
-      },
-      multiple: false,
-      disabled: !videoFile
-    });
+    const { getRootProps: getSrtRootProps, getInputProps: getSrtInputProps } =
+      useDropzone({
+        onDrop,
+        accept: {
+          "application/x-subrip": [".srt"],
+          "text/plain": [".srt"],
+        },
+        multiple: false,
+        disabled: !videoFile,
+      });
 
     return (
       <div
         {...getSrtRootProps()}
         className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors
-          ${!videoFile ? 'border-border bg-muted/50 cursor-not-allowed' :
-            isDragging ? 'border-primary bg-secondary/50' : 'border-border hover:border-primary hover:bg-secondary/20 cursor-pointer'}`}
+          ${
+            !videoFile
+              ? "border-border bg-muted/50 cursor-not-allowed"
+              : isDragging
+              ? "border-primary bg-secondary/50"
+              : "border-border hover:border-primary hover:bg-secondary/20 cursor-pointer"
+          }`}
         onDragEnter={() => videoFile && setIsDragging(true)}
         onDragLeave={() => videoFile && setIsDragging(false)}
       >
         <input {...getSrtInputProps()} />
         <div className="flex flex-col items-center gap-2">
           <p className="text-lg font-medium">
-            {!videoFile ? 'Upload Video First' : !srtFile ? 'Upload Subtitles (Optional)' : 'Subtitles Uploaded'}
+            {!videoFile
+              ? "Upload Video First"
+              : !srtFile
+              ? "Upload Subtitles (Optional)"
+              : "Subtitles Uploaded"}
           </p>
           <p className="text-sm text-muted-foreground">
-            {!videoFile ? 'Video required for subtitle upload' :
-              !srtFile ? 'Drag and drop or click to select .srt file' : srtFile.name}
+            {!videoFile
+              ? "Video required for subtitle upload"
+              : !srtFile
+              ? "Drag and drop or click to select .srt file"
+              : srtFile.name}
           </p>
           {srtFile && (
             <button
@@ -203,7 +238,17 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
     <div className="space-y-6">
       {error && (
         <div className="flex items-center gap-3 text-sm text-destructive p-4 bg-destructive/10 rounded-lg border border-destructive/20">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -211,7 +256,7 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
           {error}
         </div>
       )}
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Video Upload */}
         <div className="space-y-4">
@@ -224,7 +269,17 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
           <VideoUpload />
           {videoFile && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -245,7 +300,17 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
           <SubtitleUpload />
           {srtFile && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -259,7 +324,18 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
       {/* Help Text */}
       <div className="pt-6 border-t">
         <div className="flex items-start gap-3 text-sm text-muted-foreground">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mt-0.5"
+          >
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="16" x2="12" y2="12"></line>
             <line x1="12" y1="8" x2="12.01" y2="8"></line>
