@@ -1,32 +1,32 @@
-"use client"
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 export default function IntegrationsPage() {
-  const [clickupToken, setClickupToken] = useState('');
+  const [clickupToken, setClickupToken] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [savedToken, setSavedToken] = useState<string | null>(null);
 
   const handleSaveToken = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch('/api/integrations/clickup', {
-        method: 'POST',
+      const response = await fetch("/api/integrations/clickup", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ token: clickupToken }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save token');
+        throw new Error("Failed to save token");
       }
 
       setSavedToken(clickupToken);
-      setClickupToken('');
+      setClickupToken("");
     } catch (error) {
-      console.error('Error saving token:', error);
-      alert('Failed to save ClickUp token. Please try again.');
+      console.error("Error saving token:", error);
+      alert("Failed to save ClickUp token. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -48,8 +48,9 @@ export default function IntegrationsPage() {
         <div className="max-w-2xl">
           <h2 className="text-3xl font-bold mb-4">Configure Integrations</h2>
           <p className="text-muted-foreground">
-            Connect your PM AI Agent with external tools to streamline your workflow.
-            Currently supporting ClickUp integration for direct story exports.
+            Connect your PM AI Agent with external tools to streamline your
+            workflow. Currently supporting ClickUp integration for direct story
+            exports.
           </p>
         </div>
 
@@ -75,7 +76,8 @@ export default function IntegrationsPage() {
               <div>
                 <h3 className="text-lg font-semibold">ClickUp Integration</h3>
                 <p className="text-sm text-muted-foreground">
-                  Connect with ClickUp to export generated user stories directly to your workspace.
+                  Connect with ClickUp to export generated user stories directly
+                  to your workspace.
                 </p>
               </div>
             </div>
@@ -103,8 +105,8 @@ export default function IntegrationsPage() {
                 disabled={!clickupToken || isSaving}
                 className={`w-full px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 ${
                   !clickupToken || isSaving
-                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                    : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    ? "bg-muted text-muted-foreground cursor-not-allowed"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
                 }`}
               >
                 {isSaving ? (
@@ -113,14 +115,15 @@ export default function IntegrationsPage() {
                     <span>Saving...</span>
                   </>
                 ) : (
-                  'Save Token'
+                  "Save Token"
                 )}
               </button>
             </div>
 
             {savedToken && (
               <div className="bg-primary/10 text-primary px-4 py-3 rounded-md text-sm">
-                ClickUp integration configured successfully! Your stories can now be exported to ClickUp.
+                ClickUp integration configured successfully! Your stories can
+                now be exported to ClickUp.
               </div>
             )}
 
