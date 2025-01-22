@@ -93,19 +93,24 @@ export interface ClickUpList {
 }
 
 export class ClickUpService {
-  private baseUrl = 'https://api.clickup.com/api/v2';
+  private baseUrl = "https://api.clickup.com/api/v2";
   private token: string;
 
   constructor(token: string) {
     this.token = token;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       headers: {
-        'Authorization': this.token.startsWith('pk_') ? this.token : `Bearer ${this.token}`,
-        'Content-Type': 'application/json',
+        Authorization: this.token.startsWith("pk_")
+          ? this.token
+          : `Bearer ${this.token}`,
+        "Content-Type": "application/json",
         ...options.headers,
       },
     });
@@ -114,31 +119,41 @@ export class ClickUpService {
 
     if (!response.ok) {
       const errorMessage = data.err || data.error || response.statusText;
-      throw new Error(`ClickUp API error: ${errorMessage} (${response.status})`);
+      throw new Error(
+        `ClickUp API error: ${errorMessage} (${response.status})`
+      );
     }
 
     return data;
   }
 
   async getSpaces(): Promise<ClickUpSpace[]> {
-    const teams = await this.request<{ teams: ClickUpTeam[] }>('/team');
+    const teams = await this.request<{ teams: ClickUpTeam[] }>("/team");
     const spaces: ClickUpSpace[] = [];
-    
+
     for (const team of teams.teams) {
-      const teamSpaces = await this.request<{ spaces: ClickUpSpace[] }>(`/team/${team.id}/space`);
+      const teamSpaces = await this.request<{ spaces: ClickUpSpace[] }>(
+        `/team/${team.id}/space`
+      );
       spaces.push(...teamSpaces.spaces);
     }
-    
+
     return spaces;
   }
 
   async getLists(spaceId: string): Promise<ClickUpList[]> {
-    const folderlessLists = await this.request<{ lists: ClickUpList[] }>(`/space/${spaceId}/list`);
-    const folders = await this.request<{ folders: ClickUpFolder[] }>(`/space/${spaceId}/folder`);
+    const folderlessLists = await this.request<{ lists: ClickUpList[] }>(
+      `/space/${spaceId}/list`
+    );
+    const folders = await this.request<{ folders: ClickUpFolder[] }>(
+      `/space/${spaceId}/folder`
+    );
     const lists = [...folderlessLists.lists];
 
     for (const folder of folders.folders) {
-      const folderLists = await this.request<{ lists: ClickUpList[] }>(`/folder/${folder.id}/list`);
+      const folderLists = await this.request<{ lists: ClickUpList[] }>(
+        `/folder/${folder.id}/list`
+      );
       lists.push(...folderLists.lists);
     }
 
@@ -146,39 +161,48 @@ export class ClickUpService {
   }
 
   async getListStatuses(listId: string): Promise<ClickUpStatus[]> {
-    const response = await this.request<{ statuses: ClickUpStatus[] }>(`/list/${listId}`);
+    const response = await this.request<{ statuses: ClickUpStatus[] }>(
+      `/list/${listId}`
+    );
     return response.statuses;
   }
 
   async getDefaultStatus(listId: string): Promise<string> {
     const statuses = await this.getListStatuses(listId);
     // Find the status with the lowest orderindex (usually "to do" or "open")
-    const defaultStatus = statuses.sort((a, b) => a.orderindex - b.orderindex)[0];
+    const defaultStatus = statuses.sort(
+      (a, b) => a.orderindex - b.orderindex
+    )[0];
     if (!defaultStatus) {
-      throw new Error('No status found for the selected list');
+      throw new Error("No status found for the selected list");
     }
     return defaultStatus.status;
   }
 
-  async createTask(listId: string, task: ClickUpTaskCreate): Promise<ClickUpTaskResponse> {
+  async createTask(
+    listId: string,
+    task: ClickUpTaskCreate
+  ): Promise<ClickUpTaskResponse> {
     // If no status is provided, use the list's default status
     if (!task.status) {
       task.status = await this.getDefaultStatus(listId);
     }
     return this.request<ClickUpTaskResponse>(`/list/${listId}/task`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(task),
     });
   }
 
   async addAttachment(taskId: string, file: File): Promise<void> {
     const formData = new FormData();
-    formData.append('attachment', file);
+    formData.append("attachment", file);
 
     await fetch(`${this.baseUrl}/task/${taskId}/attachment`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': this.token.startsWith('pk_') ? this.token : `Bearer ${this.token}`,
+        Authorization: this.token.startsWith("pk_")
+          ? this.token
+          : `Bearer ${this.token}`,
       },
       body: formData,
     });
@@ -186,7 +210,7 @@ export class ClickUpService {
 
   async validateToken(): Promise<boolean> {
     try {
-      await this.request<{ teams: ClickUpTeam[] }>('/team');
+      await this.request<{ teams: ClickUpTeam[] }>("/team");
       return true;
     } catch {
       return false;
