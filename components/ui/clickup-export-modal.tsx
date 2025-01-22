@@ -1,7 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react';
-import { ClickUpService, ClickUpSpace, ClickUpList } from '../../lib/clickup-service';
+import { useState, useEffect } from "react";
+import {
+  ClickUpService,
+  ClickUpSpace,
+  ClickUpList,
+} from "../../lib/clickup-service";
 
 interface ClickUpExportModalProps {
   isOpen: boolean;
@@ -9,11 +13,15 @@ interface ClickUpExportModalProps {
   onExport: (listId: string) => Promise<void>;
 }
 
-export function ClickUpExportModal({ isOpen, onClose, onExport }: ClickUpExportModalProps) {
+export function ClickUpExportModal({
+  isOpen,
+  onClose,
+  onExport,
+}: ClickUpExportModalProps) {
   const [spaces, setSpaces] = useState<ClickUpSpace[]>([]);
   const [lists, setLists] = useState<ClickUpList[]>([]);
-  const [selectedSpace, setSelectedSpace] = useState<string>('');
-  const [selectedList, setSelectedList] = useState<string>('');
+  const [selectedSpace, setSelectedSpace] = useState<string>("");
+  const [selectedList, setSelectedList] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +36,7 @@ export function ClickUpExportModal({ isOpen, onClose, onExport }: ClickUpExportM
       loadLists(selectedSpace);
     } else {
       setLists([]);
-      setSelectedList('');
+      setSelectedList("");
     }
   }, [selectedSpace]);
 
@@ -36,9 +44,9 @@ export function ClickUpExportModal({ isOpen, onClose, onExport }: ClickUpExportM
     setIsLoading(true);
     setError(null);
     try {
-      const tokenResponse = await fetch('/api/integrations/clickup/token');
+      const tokenResponse = await fetch("/api/integrations/clickup/token");
       if (!tokenResponse.ok) {
-        throw new Error('ClickUp integration not configured');
+        throw new Error("ClickUp integration not configured");
       }
 
       const { token } = await tokenResponse.json();
@@ -46,7 +54,9 @@ export function ClickUpExportModal({ isOpen, onClose, onExport }: ClickUpExportM
       const spacesList = await clickupService.getSpaces();
       setSpaces(spacesList);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to load spaces');
+      setError(
+        error instanceof Error ? error.message : "Failed to load spaces"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -56,9 +66,9 @@ export function ClickUpExportModal({ isOpen, onClose, onExport }: ClickUpExportM
     setIsLoading(true);
     setError(null);
     try {
-      const tokenResponse = await fetch('/api/integrations/clickup/token');
+      const tokenResponse = await fetch("/api/integrations/clickup/token");
       if (!tokenResponse.ok) {
-        throw new Error('ClickUp integration not configured');
+        throw new Error("ClickUp integration not configured");
       }
 
       const { token } = await tokenResponse.json();
@@ -66,7 +76,7 @@ export function ClickUpExportModal({ isOpen, onClose, onExport }: ClickUpExportM
       const listsList = await clickupService.getLists(spaceId);
       setLists(listsList);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to load lists');
+      setError(error instanceof Error ? error.message : "Failed to load lists");
     } finally {
       setIsLoading(false);
     }
@@ -74,14 +84,16 @@ export function ClickUpExportModal({ isOpen, onClose, onExport }: ClickUpExportM
 
   const handleExport = async () => {
     if (!selectedList) return;
-    
+
     setIsLoading(true);
     setError(null);
     try {
       await onExport(selectedList);
       onClose();
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to export to ClickUp');
+      setError(
+        error instanceof Error ? error.message : "Failed to export to ClickUp"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +111,17 @@ export function ClickUpExportModal({ isOpen, onClose, onExport }: ClickUpExportM
               onClick={onClose}
               className="text-muted-foreground hover:text-foreground"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
@@ -169,8 +191,8 @@ export function ClickUpExportModal({ isOpen, onClose, onExport }: ClickUpExportM
               disabled={!selectedList || isLoading}
               className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 ${
                 !selectedList || isLoading
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  ? "bg-muted text-muted-foreground cursor-not-allowed"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
               }`}
             >
               {isLoading ? (
@@ -179,7 +201,7 @@ export function ClickUpExportModal({ isOpen, onClose, onExport }: ClickUpExportM
                   <span>Exporting...</span>
                 </>
               ) : (
-                'Export to ClickUp'
+                "Export to ClickUp"
               )}
             </button>
           </div>
