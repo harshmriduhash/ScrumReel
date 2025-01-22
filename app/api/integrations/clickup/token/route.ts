@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
@@ -6,16 +6,16 @@ export async function GET() {
 
     if (!token) {
       return NextResponse.json(
-        { error: 'ClickUp token not configured' },
+        { error: "ClickUp token not configured" },
         { status: 404 }
       );
     }
 
     return NextResponse.json({ token });
   } catch (error) {
-    console.error('Error retrieving ClickUp token:', error);
+    console.error("Error retrieving ClickUp token:", error);
     return NextResponse.json(
-      { error: 'Failed to retrieve ClickUp token' },
+      { error: "Failed to retrieve ClickUp token" },
       { status: 500 }
     );
   }
